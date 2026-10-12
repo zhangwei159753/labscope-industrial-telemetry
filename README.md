@@ -4,6 +4,19 @@ LabScope 是面向工业设备遥测采集与运行监控的 C++ 服务端和 We
 
 项目基于 Drogon 构建，配套 PostgreSQL、Mosquitto、Vue 3、TypeScript 和 ECharts。服务端按采集、存储、告警、权限和观测等职责组织模块，使用 Docker Compose 启动本地开发环境。
 
+## 界面预览
+
+以下截图来自 LabScope 本地演示环境，展示 `plant-a` 站点的模拟设备数据、设备台账和系统健康状态。
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/6496fb73-1cd4-4924-888f-dbc980bcf78a" alt="LabScope 运行总览" width="49%" />
+  <img src="https://github.com/user-attachments/assets/06108013-fc29-40ff-8779-6723613f78ef" alt="LabScope 设备台账" width="49%" />
+</p>
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/51bedf76-6a78-4f79-b2fa-46d0c0a19953" alt="LabScope 系统健康" width="82%" />
+</p>
+
 ## 工程能力
 
 - MQTT QoS 1 遥测接入，按站点和设备隔离主题及设备凭据。
