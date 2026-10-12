@@ -1,0 +1,72 @@
+{
+  "schema_version": 2,
+  "host": "redacted",
+  "configuration": {
+    "site_id": "plant-a",
+    "devices": 1,
+    "credentials": "<redacted local path>",
+    "host": "127.0.0.1",
+    "port": 1883,
+    "rate_hz": 1.0,
+    "duration_sec": 60,
+    "drain_timeout_sec": 90.0,
+    "outbox": "<redacted local path>",
+    "compose_file": "compose.yaml",
+    "retry_deadline_sec": 300,
+    "fault_profile": "nominal",
+    "report": "docs\\benchmarks\\run-20261012T032358Z.json",
+    "devices_list": [
+      "device-0001"
+    ]
+  },
+  "runtime": {
+    "python": "3.13.5",
+    "platform": "Windows 11",
+    "sqlite": "3.45.3",
+    "paho_mqtt": "2.1.0"
+  },
+  "started_at_epoch": 1791775439.1317396,
+  "finished_at_epoch": 1791775499.495686,
+  "elapsed_sec": 60.364,
+  "counters": {
+    "sent": 30,
+    "persisted": 30,
+    "duplicate": 0,
+    "rejected": 0,
+    "retries": 1,
+    "reconnects": 1,
+    "worker_errors": 0,
+    "enqueued": 30,
+    "injected_sequence_gaps": 0,
+    "pending_at_end": 0,
+    "dead_letter": 0
+  },
+  "throughput_per_sec": 0.497,
+  "ack_latency_ms": {
+    "p50": 52.311,
+    "p95": 56.153,
+    "p99": 60.238
+  },
+  "worker_errors": [],
+  "resource_usage": {
+    "cpu_process_seconds": 1.203,
+    "cpu_average_cores": 0.02,
+    "peak_rss_bytes": null,
+    "outbox_bytes": 28672
+  },
+  "delivery_accounting": {
+    "enqueued": 30,
+    "terminal_acks": 30,
+    "unresolved_pending": 0,
+    "dead_letter_total": 0,
+    "drained": true
+  },
+  "database_verification": {
+    "verified": true,
+    "expected_rows": 30,
+    "persisted_rows": 30,
+    "postgres_version": "16.15",
+    "reason": "row count matches application ACK outcomes"
+  },
+  "run_id": "20261012T032358Z"
+}

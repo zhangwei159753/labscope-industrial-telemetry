@@ -1,0 +1,130 @@
+name: labscope
+
+services:
+  db:
+    image: postgres:16.15-alpine3.23
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-labscope}
+      POSTGRES_USER: ${POSTGRES_USER:-labscope}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-labscope-dev-only-change-me}
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 10s
+    restart: unless-stopped
+
+  mqtt:
+    image: eclipse-mosquitto:2.1.2-alpine
+    user: "0:0"
+    entrypoint: ["/bin/sh", "/mosquitto/config/mosquitto-entrypoint.sh"]
+    environment:
+      MOSQUITTO_ADMIN_USER: ${MOSQUITTO_ADMIN_USER:-labscope-admin}
+      MOSQUITTO_ADMIN_PASSWORD: ${MOSQUITTO_ADMIN_PASSWORD:-labscope-dev-admin-change-me}
+    ports:
+      - "127.0.0.1:${MQTT_PORT:-1883}:1883"
+    volumes:
+      - ./config/mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - ./docker/mosquitto-entrypoint.sh:/mosquitto/config/mosquitto-entrypoint.sh:ro
+      - mqtt_data:/mosquitto/data
+      - mqtt_log:/mosquitto/log
+    healthcheck:
+      test: ["CMD-SHELL", "mosquitto_sub -h 127.0.0.1 -p 1883 -u \"$${MOSQUITTO_ADMIN_USER}\" -P \"$${MOSQUITTO_ADMIN_PASSWORD}\" -t '$$SYS/broker/version' -C 1 -W 3 >/dev/null"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 5s
+    restart: unless-stopped
+
+  mqtt-bootstrap:
+    image: eclipse-mosquitto:2.1.2-alpine
+    command: ["/bin/sh", "/scripts/mqtt-bootstrap.sh"]
+    environment:
+      MOSQUITTO_ADMIN_USER: ${MOSQUITTO_ADMIN_USER:-labscope-admin}
+      MOSQUITTO_ADMIN_PASSWORD: ${MOSQUITTO_ADMIN_PASSWORD:-labscope-dev-admin-change-me}
+      MOSQUITTO_INGEST_USER: ${MOSQUITTO_INGEST_USER:-labscope-ingest}
+      MOSQUITTO_INGEST_PASSWORD: ${MOSQUITTO_INGEST_PASSWORD:-labscope-dev-ingest-change-me}
+    volumes:
+      - ./docker/mqtt-bootstrap.sh:/scripts/mqtt-bootstrap.sh:ro
+    depends_on:
+      mqtt:
+        condition: service_healthy
+    restart: "no"
+
+  migrate:
+    image: flyway/flyway:13.7.0-alpine
+    command:
+      - -url=jdbc:postgresql://db:5432/${POSTGRES_DB:-labscope}
+      - -user=${POSTGRES_USER:-labscope}
+      - -password=${POSTGRES_PASSWORD:-labscope-dev-only-change-me}
+      - -connectRetries=60
+      - -locations=filesystem:/flyway/sql
+      - migrate
+    volumes:
+      - ./migrations:/flyway/sql:ro
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: "no"
+
+  app:
+    build:
+      context: .
+      dockerfile: docker/app.Dockerfile
+    image: labscope/app:dev
+    environment:
+      LABSCOPE_ENV: ${LABSCOPE_ENV:-development}
+      LABSCOPE_DB_HOST: db
+      LABSCOPE_DB_PORT: "5432"
+      LABSCOPE_DB_NAME: ${POSTGRES_DB:-labscope}
+      LABSCOPE_DB_USER: ${POSTGRES_USER:-labscope}
+      LABSCOPE_DB_PASSWORD: ${POSTGRES_PASSWORD:-labscope-dev-only-change-me}
+      LABSCOPE_MQTT_URI: tcp://mqtt:1883
+      LABSCOPE_MQTT_USERNAME: ${MOSQUITTO_INGEST_USER:-labscope-ingest}
+      LABSCOPE_MQTT_PASSWORD: ${MOSQUITTO_INGEST_PASSWORD:-labscope-dev-ingest-change-me}
+      LABSCOPE_MQTT_PERSISTENCE: /app/data/mqtt
+      LABSCOPE_HTTP_BIND: 0.0.0.0
+      LABSCOPE_DEBUG_ALARMS: ${LABSCOPE_DEBUG_ALARMS:-0}
+    expose:
+      - "8080"
+    volumes:
+      - app_data:/app/data
+    depends_on:
+      db:
+        condition: service_healthy
+      mqtt:
+        condition: service_healthy
+      mqtt-bootstrap:
+        condition: service_completed_successfully
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/healthz >/dev/null"]
+      interval: 10s
+      timeout: 3s
+      retries: 6
+      start_period: 10s
+    restart: unless-stopped
+
+  web:
+    build:
+      context: .
+      dockerfile: docker/web.Dockerfile
+    image: labscope/web:dev
+    ports:
+      - "127.0.0.1:${LABSCOPE_HTTP_PORT:-8080}:80"
+    depends_on:
+      app:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  app_data:
+  db_data:
+  mqtt_data:
+  mqtt_log:

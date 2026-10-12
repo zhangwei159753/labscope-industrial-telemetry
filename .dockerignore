@@ -1,0 +1,15 @@
+.git
+.worktrees
+.superpowers
+.venv
+.npm-cache
+build
+vcpkg_installed
+web/node_modules
+web/dist
+data
+uploads
+*.log
+.env
+.env.*
+!.env.example

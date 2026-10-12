@@ -1,0 +1,29 @@
+{
+  "mode": "same-host simulated instruments; no real hardware",
+  "host": {
+    "platform": "Windows-11-10.0.26200-SP0",
+    "processor": "Intel64 Family 6 Model 183 Stepping 1, GenuineIntel",
+    "logical_cpus": 20
+  },
+  "configuration": {
+    "devices": 2,
+    "monitors_per_device": 2,
+    "target_interval_ms": 1.0,
+    "duration_sec": 5.0
+  },
+  "results": {
+    "elapsed_sec": 5.002,
+    "samples_sent": 9967,
+    "actual_send_rate_per_sec": 1992.6,
+    "server_accepted_delta": 9967,
+    "server_rejected_delta": 0,
+    "monitor_frames_observed": 328,
+    "observed_monitor_latency_ms": {
+      "count": 328,
+      "p50": 2.3,
+      "p95": 3.33,
+      "p99": 44.95
+    }
+  },
+  "worker_errors": []
+}
